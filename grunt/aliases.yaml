@@ -1,2 +1,6 @@
 default:
-    - 'less'
+    - 'newer:less'
+
+serve:
+    - 'newer:less'
+    - 'connect:server'
