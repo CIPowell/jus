@@ -3,10 +3,14 @@
  */
 
 var express = require('express'),
-    JusServer = require('./JusServer.js'),
-    app = express();
+    JusServer = require('./Uploader.js'),
+    app = express(),
+    swig = require('swig');
 
+app.engine('html', swig.renderFile);
 
+app.set('view engine', 'html');
+app.set('views', __dirname + '/../templates');
 
 app.use(express.bodyParser({uploadDir:'/tmp'}));
 
@@ -14,18 +18,15 @@ app.post('/upload', function(request, response){
     var uploader = new JusServer.Uploader();
 
     uploader.on('complete', function(evt){
-        if(evt.success)
-        {
-            response.send('done');
-        }
-        else
-        {
-            response.send(event.error);
-        }
+        response.render('sheet_preview.html', evt);
     });
 
-    uploader.upload_file(request, response);
 
+    uploader.upload(request, response);
+});
+
+app.get('/get_rows/:file' , function(request, response){
+    //TODO : return rows from a spreadsheet
 });
 
 app.listen(9000);
