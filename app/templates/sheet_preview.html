@@ -4,10 +4,25 @@
     {% for file in files %}
         <section class="file" id="{{file.name}}">
             <h1>{{file.name}}</h2>
-            {% for sheet in file.sheets %}
+            {% for sheet in file.data.sheets %}
                 <section class="sheet" id="{{file.name}}_{{sheet.name}}">
-                    <h2>{{sheet}}</h2>
-                    {{ sheet.rows }}
+                    <h2>{{sheet.name}}</h2>
+                    <table>
+                        {% for row in sheet.rows %}
+                        {% if loop.first %}
+                            <tr>
+                                {% for key in Object.keys(row) %}
+                                    <th>{{key}}</th>
+                                {% endfor%}
+                            </tr>
+                        {% endif %}
+                            <tr>
+                                {% for key in Object.keys(row) %}
+                                    <td>{{row[key]}}</td>
+                                {% endfor%}
+                            </tr>
+                        {% endfor %}
+                    </table>
                 </section>
             {% endfor %}
         </section>

@@ -20,31 +20,45 @@ Parser.prototype = Object.create(events.EventEmitter.prototype, {
     }
 });
 
-Parser.prototype.parse = function(filename, parse_callback, parse_error_callback)
+Parser.prototype.parse = function(filename)
 {
-    this.parser.on('completed', parse_callback);
-    this.parser.on('error', parse_error_callback);
+    this.parser.on('completed_p', this.completed_callback.bind(this));
+    this.parser.on('error', this.error_callback);
+
+    this.filename = filename;
 
     this.parser.open(filename);
-}
+};
 
-Parser.prototype.parse_stream = function(stream, parse_callback, parse_error_callback)
+Parser.prototype.parse_stream = function(filename, stream, max_rows)
 {
-    this.parser.on('completed', parse_callback);
-    this.parser.on('error', parse_error_callback);
 
-    this.parser.readstream(stream);
-}
+    this.parser.on('completed_p', this.completed_callback.bind(this));
+    //this.parser.on('error', this.error_callback);
 
+    this.filename = filename;
+
+    this.parser.read_stream(filename, stream, max_rows);
+};
+
+Parser.prototype.completed_callback = function(evt)
+{
+    this.emit("complete_d", {name: this.filename, data : evt});
+};
+
+Parser.prototype.error_callback = function(evt)
+{
+    this.emit("error", evt);
+};
 
 Parser.prototype.get_sheets = function()
 {
     return this.parser.get_sheets();
-}
+};
 
 Parser.prototype.get_rows = function (sheet, n)
 {
     return this.parser.get_rows(sheet, n);
-}
+};
 
 module.exports = Parser;

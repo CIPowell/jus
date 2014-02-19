@@ -33,8 +33,12 @@ Uploader.prototype.done_callback = function(err)
     if(complete) this.uploader.emit('complete', { files : this.uploader.ctrls });
 };
 
-Uploader.prototype.open_callback = function(evt)
+Uploader.prototype.open_callback = function(err, fd)
 {
+    this.writestream = fd;
+
+    console.log(err, fd);
+
     this.readstream.pipe(this.writestream);
 }
 
@@ -43,10 +47,15 @@ Uploader.prototype.upload = function(fieldname, filestream, filename, encoding, 
     if(to_disk)
     {
         var target_path = path.resolve(this.directory + filename);
-        this.readstream = stream;
-        this.write_stream = fs.open(target_path, 'w+', this.open_callback.bind(this));
+        this.readstream = filestream;
+
+        //fs.open(target_path, 'w+', this.open_callback.bind(this));
+
+        this.readstream.pipe(fs.createWriteStream(target_path));
+
         this.readstream.on('end', function(evt){ // cheeky anonymous functon
             this.emit('saved_to', {name: filename, destination : target_path});
+            console.log('done');
         });
     }
     else
@@ -66,4 +75,4 @@ Uploader.prototype.upload = function(fieldname, filestream, filename, encoding, 
 //    }
 };
 
-module.exports = { Uploader : Uploader };
+module.exports =  Uploader ;
