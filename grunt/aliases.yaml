@@ -3,4 +3,6 @@ default:
 
 serve:
     - 'newer:less'
-    - 'connect:server'
+    - 'node_server'
+    - 'configureProxies'
+    - 'connect'

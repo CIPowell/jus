@@ -53,7 +53,7 @@ function JusApp()
         this.response = response;
         this.files_to_process = [];
 
-        if( req_url.pathname == '/upload' && request.method == 'POST' )
+        if( req_url.pathname == '/uploader/upload' && request.method == 'POST' )
         {
             var bb = new busboy({ headers : request.headers });
             bb.on('file', this.fileHandler.bind(this));
@@ -62,7 +62,7 @@ function JusApp()
         }
         else
         {
-            this.response.end()
+            this.response.end('hehe')
         }
     }
 }
@@ -73,4 +73,4 @@ var app = http.createServer(function(request, response){
     j_app.router(request, response);
 });
 
-app.listen(9000);
+module.exports = app;
