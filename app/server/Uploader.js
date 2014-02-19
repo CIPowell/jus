@@ -33,18 +33,37 @@ Uploader.prototype.done_callback = function(err)
     if(complete) this.uploader.emit('complete', { files : this.uploader.ctrls });
 };
 
-Uploader.prototype.upload = function(req, res)
+Uploader.prototype.open_callback = function(evt)
 {
-    for(file in req.files)
+    this.readstream.pipe(this.writestream);
+}
+
+Uploader.prototype.upload = function(fieldname, filestream, filename, encoding, mime_type, to_disk)
+{
+    if(to_disk)
     {
-        var tmp_path = req.files[file].path,
-            target_path = path.resolve(this.directory + req.files[file].name);
-
-        this.ctrls[file] = false;;
-
-        this.res = res;
-        fs.rename(tmp_path, target_path, this.done_callback.bind({ uploader: this, filename : req.files[file].name, path : target_path, ctrl_name : file}));
+        var target_path = path.resolve(this.directory + filename);
+        this.readstream = stream;
+        this.write_stream = fs.open(target_path, 'w+', this.open_callback.bind(this));
+        this.readstream.on('end', function(evt){ // cheeky anonymous functon
+            this.emit('saved_to', {name: filename, destination : target_path});
+        });
     }
+    else
+    {
+        this.emit('stream_opened', {name : filename, stream : filestream});
+    }
+//    for(file in req.files)
+//    {
+//        var tmp_path = req.files[file].path,
+//            target_path = path.resolve(this.directory + req.files[file].name);
+//
+//        this.ctrls[file] = false;
+//
+//        this.res = res;
+//
+//        fs.rename(tmp_path, target_path, this.done_callback.bind({ uploader: this, filename : req.files[file].name, path : target_path, ctrl_name : file}));
+//    }
 };
 
 module.exports = { Uploader : Uploader };

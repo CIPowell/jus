@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Sheet Preview</h2>
     {% for file in files %}
         <section class="file" id="{{file.name}}">
             <h1>{{file.name}}</h2>
             {% for sheet in file.sheets %}
                 <section class="sheet" id="{{file.name}}_{{sheet.name}}">
+                    <h2>{{sheet}}</h2>
                     {{ sheet.rows }}
                 </section>
             {% endfor %}
