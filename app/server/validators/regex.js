@@ -1,12 +1,12 @@
 module.exports = function(value)
 {
-    var exp = this.exp;
+    var exp = this.params.exp;
     if ( value.match(exp) )
     {
-        return { success : true, message : undefined };
+        this.valid('regex')
     }
     else
     {
-        return { success : false, message : this.fail_message ? this.fail_message : 'Did not match the regular expression' };
+        this.invalid('regex', this.params.fail_message ? this.param.fail_message : 'Did not match the regular expression /' + exp.toString() + '/');
     }
 };

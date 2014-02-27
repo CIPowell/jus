@@ -27,8 +27,8 @@ Parser.prototype = Object.create(events.EventEmitter.prototype, {
 Parser.prototype.parse = function(filename)
 {
     this.parser.on('completed_p', this.completed_callback.bind(this));
-    this.parser.on('error', this.error_callback);
-    this.parser.on('record', this.record_callback);
+    this.parser.on('error', this.error_callback.bind(this));
+    this.parser.on('record', this.record_callback.bind(this));
 
     this.filename = filename;
 

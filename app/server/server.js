@@ -16,6 +16,7 @@ function JusApp()
 
     this.records = 0;
     this.completed = 0;
+    this.parse_completed = false;
 
     this.validate = function(file, sheet)
     {
@@ -30,13 +31,44 @@ function JusApp()
             ]
         });
 
-        this.validator.on('valid' )
-        this.validator.on('invalid' )
+        this.validator.on('valid', this.validation_callback.bind(this) );
+        this.validator.on('invalid', this.validation_callback.bind(this) );
 
-        var Parser = new Parser('delmited');
+        this.row_tpl = swig.compileFile('validation_row.html');
+
+        var parser = new Parser('delimited');
+
         parser.on('record', this.parse_to_validate.bind(this));
-        parser.parse('../uploads' + filename);
+        parser.on('complete_d', this.validate_parser_complete.bind(this));
+
+        parser.parse('app/uploads/' + file);
+
+        this.response.write(swig.renderFile('validation_header.html', {}));
     };
+
+    this.validate_parser_complete = function()
+    {
+        this.parse_completed = true;
+        this.check_and_finish();
+    }
+
+    this.validation_callback = function(result)
+    {
+        this.completed ++;
+
+        this.response.write(this.row_tpl(result));
+
+        this.check_and_finish();
+    };
+
+    this.check_and_finish = function()
+    {
+        if( this.parse_completed && (this.records == this.completed) )
+        {
+            this.response.write(swig.renderFile('validation_footer.html', {}));
+            this.response.end();
+        }
+    }
 
     this.parse_to_validate = function(record)
     {
@@ -90,14 +122,12 @@ function JusApp()
         this.response = response;
         this.files_to_process = [];
 
-        return;
-
         if( req_url.pathname == '/uploader/upload' && request.method == 'POST' )
         {
             var bb = new busboy({ headers : request.headers });
+
             bb.on('file', this.fileHandler.bind(this));
             bb.on('finish', function(){
-                console.log(this.files_to_process);
                 if( !this.files_to_process.length )
                 {
                     this.response.end('no files');
@@ -111,7 +141,7 @@ function JusApp()
         }
         else
         {
-            this.response.end('done')
+            this.response.end('404')
         }
     }
 }
@@ -121,5 +151,7 @@ var app = http.createServer(function(request, response){
     var j_app = new JusApp();
     j_app.router(request, response);
 });
+
+app.listen(8000);
 
 module.exports = app;

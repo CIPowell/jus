@@ -9,18 +9,18 @@ var events = require('events');
 var FieldValidator = function (field_name, validators)
 {
     this.field_name = field_name;
-    this.vaidators = []
+    this.validators = []
     this.results = {};
 
     for( var i = validators.length; i-- ; )
     {
-        this.validators.push(requre('./validators/' + this.validators[i].name).bind({
-            params : this.vaidators[i].params,
+        this.validators.push(require('./validators/' + validators[i].name).bind({
+            params : validators[i].params,
             valid : this.valid.bind(this),
             invalid : this.invalid.bind(this)
         }));
 
-        this.results[this.validators[i].name] = undefined;
+        this.results[validators[i].name] = undefined;
     }
 };
 
@@ -42,7 +42,7 @@ FieldValidator.prototype.validate = function(value)
     for( var v in this.validators )
     {
         //fire off all the validators ... responses will be collected
-        v(value);
+        this.validators[v](value);
     }
 };
 
@@ -50,39 +50,39 @@ FieldValidator.prototype.testdone = function()
 {
     var valid= true;
     var messages = [];
-    for( var name in results )
+    for( var name in this.results )
     {
-        if( results[name] === undefined ){
+        if( this.results[name] === undefined ){
             return; //not yet done;
         }
-        else if( results[name] !== true )
+        else if( this.results[name] !== true )
         {
             valid = false; //at least one test has failed
-            messages = messages + results[name];
+            messages = messages + this.results[name];
         }
     }
 
     if(valid)
     {
-        this.emit('valid');
+        this.emit('valid', { field : this.field_name });
     }
     else
     {
-        this.emit('invalid', { messages : messages });
+        this.emit('invalid', { field : this.field_name, messages : messages });
     }
 }
 
-FieldValidator.prototype.valid = function(testName)
+FieldValidator.prototype.valid = function(testname)
 {
     this.results[testname] = true;
     this.testdone();
-}
+};
 
 FieldValidator.prototype.invalid = function(testname, messages)
 {
     this.results[testname] = messages;
     this.testdone();
-}
+};
 
 /**
  * A class that validates records, spec should be in the format { fieldname : [{ name : <>, params: <> }, ... ] }
@@ -143,9 +143,12 @@ RecordValidator.prototype.invalid_callback = function(evt)
 
 RecordValidator.prototype.checkComplete = function(evt)
 {
+    var success = true
     for( var fld in this.results )
     {
-      if(this.results[fld].success === undefined) return;
+        if(this.results[fld].success === undefined){ return; }
+
+        success = success & this.results[fld].success;
     }
 
     this.emit(success ? 'valid' : 'invalid', this.results);

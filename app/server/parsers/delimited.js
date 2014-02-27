@@ -17,9 +17,9 @@ Parser.prototype = Object.create(events.EventEmitter.prototype, {
 
 Parser.prototype.open = function (filename)
 {
-    var reader = csv().from.path(filename,{ delimiter : ',', escape : '"' });
+    this.reader = csv().from.path(filename,{ delimiter : ',', escape : '"' });
 
-     this.filename = filename;
+    this.filename = filename;
 
     this.reader.on('record', this.line_callback.bind(this));
     this.reader.on('end', this.open_callback.bind(this));
