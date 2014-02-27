@@ -28,6 +28,7 @@ Parser.prototype.parse = function(filename)
 {
     this.parser.on('completed_p', this.completed_callback.bind(this));
     this.parser.on('error', this.error_callback);
+    this.parser.on('record', this.record_callback);
 
     this.filename = filename;
 
@@ -57,6 +58,11 @@ Parser.prototype.completed_callback = function(evt)
 Parser.prototype.error_callback = function(evt)
 {
     this.emit("error", evt);
+};
+
+Parser.prototype.record_callback = function(evt)
+{
+    this.emit("record", evt);
 };
 
 Parser.prototype.get_sheets = function()

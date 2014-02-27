@@ -37,6 +37,9 @@ Parser.prototype.read_stream = function (filename, stream, max_rows)
     this.reader.on('end', this.open_callback.bind(this));
 }
 
+/**
+ * Callback that fires when each line is parsed
+ */
 Parser.prototype.line_callback = function(data, ridx)
 {
     if(this.data.length == 0) this.data[0] = {};
