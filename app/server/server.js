@@ -36,8 +36,8 @@ function JusApp()
             ]
         });
 
-        this.validator.on('valid', this.validation_callback.bind(this) );
-        this.validator.on('invalid', this.validation_callback.bind(this) );
+        this.validator.on('valid', this.validation_success_callback.bind(this) );
+        this.validator.on('invalid', this.validation_fail_callback.bind(this) );
 
         this.row_tpl = swig.compileFile('validation_row.html');
 
@@ -57,11 +57,20 @@ function JusApp()
         this.check_and_finish();
     }
 
-    this.validation_callback = function(result)
+    this.validation_success_callback = function(result)
     {
         this.completed ++;
 
-        this.response.write(this.row_tpl({record: result}));
+        this.response.write(this.row_tpl({ record: result, result : 'valid' }));
+
+        this.check_and_finish();
+    };
+
+    this.validation_fail_callback = function(result)
+    {
+        this.completed ++;
+
+        this.response.write(this.row_tpl({ record: result, result : 'invalid' }));
 
         this.check_and_finish();
     };

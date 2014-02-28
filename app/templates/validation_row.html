@@ -1,8 +1,9 @@
-<tr class>
+<tr class="{{result}}">
+    <form>
     {% for field in record %}
 
         {% if field.success %}
-            <td class="valid">{{field.value}}</td>
+            <td class="valid">{{field.value}}<input type="hidden" value="{{field.value}}" /></td>
         {% else %}
             <td class="invalid">
                 <input type="text" value="{{field.value}}" />
@@ -13,4 +14,8 @@
         {% endif %}
 
     {% endfor %}
+        <td>
+            <input type="submit" value="Submit" name="submit" />
+        </td>
+    </form>
 </tr>

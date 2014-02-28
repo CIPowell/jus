@@ -1,6 +1,8 @@
 body
 {
     font-family: droid-sans;
+    font-size : 12pt;
+    line-height: 14pt;
     max-width: 1280px;
     margin: 5px auto;
 }
@@ -8,6 +10,47 @@ body
 h1
 {
     text-shadow: 0.125em 0.25em #EEE;
+}
+
+input
+{
+    font-size : 12pt;
+    width: auto;
+}
+
+table
+{
+    border-collapse: collapse;
+    line-height: 14pt;
+}
+
+tr
+{
+    &.valid
+    {
+        td{ border-bottom: 3px solid #00FF00; }
+    }
+
+    &.invalid
+    {
+        td{ border-bottom: 3px solid #FF0000; }
+    }
+}
+
+td
+{
+    padding: 0.5em;
+    vertical-align: top;
+
+    &.valid
+    {
+        background-color: #EEFFEE;
+    }
+
+    &.invalid
+    {
+        background-color: #FFEEEE;
+    }
 }
 
 @import "./fileinput.less";
