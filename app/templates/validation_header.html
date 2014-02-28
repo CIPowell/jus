@@ -7,3 +7,10 @@
     <body>
         <h1>Jus</h1>
         <table>
+            <thead>
+                <tr>
+                    {% for fld in fields %}
+                        <th>{{ fld }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>

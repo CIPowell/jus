@@ -48,7 +48,7 @@ function JusApp()
 
         parser.parse('app/uploads/' + file);
 
-        this.response.write(swig.renderFile('validation_header.html', {}));
+        this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators) }));
     };
 
     this.validate_parser_complete = function()
