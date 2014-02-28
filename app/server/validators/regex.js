@@ -7,6 +7,6 @@ module.exports = function(value)
     }
     else
     {
-        this.invalid('regex', this.params.fail_message ? this.param.fail_message : 'Did not match the regular expression /' + exp.toString() + '/');
+        this.invalid('regex', this.params.fail_message ? this.param.fail_message : 'Did not match the regular expression ' + exp.toString());
     }
 };

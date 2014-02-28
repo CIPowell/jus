@@ -37,6 +37,8 @@ FieldValidator.prototype = Object.create(events.EventEmitter.prototype, {
  */
 FieldValidator.prototype.validate = function(value)
 {
+    this.value = value;
+
     for(var r in this.results ){ this.results[r] = undefined; }
 
     for( var v in this.validators )
@@ -58,17 +60,17 @@ FieldValidator.prototype.testdone = function()
         else if( this.results[name] !== true )
         {
             valid = false; //at least one test has failed
-            messages = messages + this.results[name];
+            message = messages.push(this.results[name]);
         }
     }
 
     if(valid)
     {
-        this.emit('valid', { field : this.field_name });
+        this.emit('valid', { field : this.field_name, value : this.value });
     }
     else
     {
-        this.emit('invalid', { field : this.field_name, messages : messages });
+        this.emit('invalid', { field : this.field_name, value : this.value, messages : messages });
     }
 }
 
@@ -124,26 +126,31 @@ RecordValidator.prototype.validate = function(record)
     for ( var field_name in this.validators )
     {
         this.results[field_name] = { success : undefined };
+    }
+
+    for ( var field_name in this.validators )
+    {
         this.validators[field_name].validate(record[field_name]);
     }
 }
 
 RecordValidator.prototype.valid_callback = function(evt)
 {
-    this.results[evt.field] = { success:true };
+    this.results[evt.field] = { success:true, fieldname :evt.field, value : evt.value };
     this.checkComplete();
 }
 
 RecordValidator.prototype.invalid_callback = function(evt)
 {
     this.success = false;
-    this.results[evt.field] = { success:false, messages: evt.messages };
+    this.results[evt.field] = { success:false, value : evt.value, messages: evt.messages };
     this.checkComplete();
 }
 
 RecordValidator.prototype.checkComplete = function(evt)
 {
-    var success = true
+    var success = true;
+
     for( var fld in this.results )
     {
         if(this.results[fld].success === undefined){ return; }

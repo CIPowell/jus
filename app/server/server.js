@@ -25,8 +25,13 @@ function JusApp()
                 {
                     name : "regex",
                     params : {
-                        pattern : /^[SIR]+[\-\+]$/
+                        exp : /^[SR]+[\-\+]$/
                     }
+                }
+            ],
+            "DateSent" : [
+                {
+                    name: "required"
                 }
             ]
         });
@@ -56,7 +61,7 @@ function JusApp()
     {
         this.completed ++;
 
-        this.response.write(this.row_tpl(result));
+        this.response.write(this.row_tpl({record: result}));
 
         this.check_and_finish();
     };
@@ -139,6 +144,13 @@ function JusApp()
         {
             this.validate(req_url.query.file, req_url.query.sheet);
         }
+//        else if( req_url.pathname.match(/^\/(scripts|styles)\//) )
+//        {
+//            fs.readFile('..' + req_url.pathname, function(err, data)
+//            {
+//                this.response.end(data);
+//            }.bind(this));
+//        }
         else
         {
             this.response.end('404')
@@ -152,6 +164,6 @@ var app = http.createServer(function(request, response){
     j_app.router(request, response);
 });
 
-app.listen(8000);
+//app.listen(8000);
 
 module.exports = app;

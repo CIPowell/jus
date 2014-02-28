@@ -1,0 +1,16 @@
+<tr class>
+    {% for field in record %}
+
+        {% if field.success %}
+            <td class="valid">{{field.value}}</td>
+        {% else %}
+            <td class="invalid">
+                <input type="text" value="{{field.value}}" />
+                {% for msg in field.messages %}
+                    <p class="validation_error">{{msg}}</p>
+                {% endfor %}
+            </td>
+        {% endif %}
+
+    {% endfor %}
+</tr>
