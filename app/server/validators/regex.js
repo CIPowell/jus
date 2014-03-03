@@ -3,7 +3,7 @@ module.exports = function(value)
     var exp = this.params.exp;
     if ( value.match(exp) )
     {
-        this.valid('regex')
+        this.valid('regex');
     }
     else
     {
