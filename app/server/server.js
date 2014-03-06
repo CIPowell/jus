@@ -6,9 +6,45 @@ var http = require('http'),
     Uploader = require('./Uploader.js'),
     Parser = require('./Parser.js'),
     Validator = require('./Validator.js'),
+    Submitter = require('./Submitter.js'),
     url = require('url'),
     swig = require('swig'),
-    busboy = require('busboy');
+    busboy = require('busboy'),
+
+    conf = {
+        "VitekAbx" : {
+
+            validators: [
+            {
+                name : "regex",
+                params : {
+                    exp : /^[SR]+[\-\+]$/
+                }
+            }],
+            transforms : [
+                {
+                    name: 'rename',
+                    params : {
+                        name : 'Antibiogram'
+                    }
+                }
+            ]
+        },
+        "DateSent" : {
+            validators : [{
+                name: "required"
+            }],
+            transforms : [
+                {
+                    name: 'rename',
+                    params : {
+                        name : 'Sent_date'
+                    }
+                }
+            ]
+        }
+    };
+
 
 function JusApp()
 {
@@ -18,23 +54,12 @@ function JusApp()
     this.completed = 0;
     this.parse_completed = false;
 
+    this.validator = new Validator.RecordValidator(conf);
+    this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiograms', conf);
+
     this.validate = function(file, sheet)
     {
-        this.validator = new Validator.RecordValidator({
-            "VitekAbx" : [
-                {
-                    name : "regex",
-                    params : {
-                        exp : /^[SR]+[\-\+]$/
-                    }
-                }
-            ],
-            "DateSent" : [
-                {
-                    name: "required"
-                }
-            ]
-        });
+
 
         this.validator.on('valid', this.validation_success_callback.bind(this) );
         this.validator.on('invalid', this.validation_fail_callback.bind(this) );
@@ -153,13 +178,6 @@ function JusApp()
         {
             this.validate(req_url.query.file, req_url.query.sheet);
         }
-//        else if( req_url.pathname.match(/^\/(scripts|styles)\//) )
-//        {
-//            fs.readFile('..' + req_url.pathname, function(err, data)
-//            {
-//                this.response.end(data);
-//            }.bind(this));
-//        }
         else
         {
             this.response.end('404')

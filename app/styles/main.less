@@ -21,10 +21,25 @@ input
     border: 1px solid #CCC;
 }
 
+input[type=file]
+{
+
+}
+
 input[type=submit]
 {
     width:auto;
     padding: 0.5em;
+
+    transition: all 0.5s ease;
+
+    &:hover
+    {
+        box-shadow: 5px 5px #ddd;
+        transform: translate(-2px,-2px);
+
+        cursor: pointer;
+    }
 }
 
 table

@@ -6,7 +6,7 @@
     var assert = require('chai').assert;
 
     describe('sqlite tests', function(){
-        var sqlite = require('../../app/databases/sqlite.js');
+        var sqlite = require('../../app/server/databases/sqlite.js');
 
 
         it('should connect to a sqlitefile', function()
@@ -67,7 +67,7 @@
             });
         });
 
-         it('should not insert a record', function()
+        it('should not insert a record', function()
         {
             var db = new sqlite({
                 filename : 'test.db'
@@ -82,6 +82,22 @@
             });
         });
 
+    });
+
+    var Submitter = require('../../app/server/Submitter.js');
+
+    describe('Test adapter', function(){
+        it('should make a connection', function(){
+            var db = new Submitter('sqlite', {
+                filename:'test.db'
+            },
+            'test',
+            {
+                "test_field" : {}
+            });
+
+            assert.ok(db);
+        });
     });
 
 })();

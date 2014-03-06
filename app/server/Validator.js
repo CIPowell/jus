@@ -95,7 +95,7 @@ var RecordValidator = function (spec)
 
     for( var field_name in spec )
     {
-        this.validators[field_name] = new FieldValidator(field_name, spec[field_name]);
+        this.validators[field_name] = new FieldValidator(field_name, spec[field_name].validators);
         this.validators[field_name].on('valid', this.valid_callback.bind(this));
         this.validators[field_name].on('invalid', this.invalid_callback.bind(this));
     }
@@ -113,7 +113,7 @@ RecordValidator.prototype = Object.create(events.EventEmitter.prototype, {
 RecordValidator.prototype.validate_field = function(field_name, value)
 {
     this.validators[field_name].validate(value);
-}
+};
 
 /**
  *
@@ -132,20 +132,20 @@ RecordValidator.prototype.validate = function(record)
     {
         this.validators[field_name].validate(record[field_name]);
     }
-}
+};
 
 RecordValidator.prototype.valid_callback = function(evt)
 {
     this.results[evt.field] = { success:true, fieldname :evt.field, value : evt.value };
     this.checkComplete();
-}
+};
 
 RecordValidator.prototype.invalid_callback = function(evt)
 {
     this.success = false;
     this.results[evt.field] = { success:false, value : evt.value, messages: evt.messages };
     this.checkComplete();
-}
+};
 
 RecordValidator.prototype.checkComplete = function(evt)
 {
@@ -159,7 +159,7 @@ RecordValidator.prototype.checkComplete = function(evt)
     }
 
     this.emit(success ? 'valid' : 'invalid', this.results);
-}
+};
 
-module.exports = { RecordValidator : RecordValidator, FieldValidator : FieldValidator }
+module.exports = { RecordValidator : RecordValidator, FieldValidator : FieldValidator };
 
