@@ -6,6 +6,12 @@ module.exports = {
           livereload: true,
         }
     },
+    html: {
+        files: '**/*.html',
+        options : {
+            livereload: true
+        }
+    },
     livereload: {
         options: {
             livereload: 3579
