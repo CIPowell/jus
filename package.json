@@ -1,7 +1,7 @@
 {
   "name": "jus",
   "description" : "Provides a spreadsheet uploading interface",
-  "version": "0.0.0-1",
+  "version": "0.0.0-2",
   "repository": "https://github.com/CIPowell/jus.git",
   "dependencies": {
       "sqlite3" : "~2.2.0",
