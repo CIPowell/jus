@@ -10,40 +10,10 @@ var http = require('http'),
     url = require('url'),
     swig = require('swig'),
     busboy = require('busboy'),
-
-    conf = {
-        "VitekAbx" : {
-
-            validators: [
-            {
-                name : "regex",
-                params : {
-                    exp : /^[SR]+[\-\+]$/
-                }
-            }],
-            transforms : [
-                {
-                    name: 'rename',
-                    params : {
-                        name : 'Antibiogram'
-                    }
-                }
-            ]
-        },
-        "DateSent" : {
-            validators : [{
-                name: "required"
-            }],
-            transforms : [
-                {
-                    name: 'rename',
-                    params : {
-                        name : 'Sent_date'
-                    }
-                }
-            ]
-        }
-    };
+    qs = require('querystring'),
+    conf = require('../conf.js'),
+    fs = require('fs');
+    path = require('path');
 
 
 function JusApp()
@@ -52,145 +22,273 @@ function JusApp()
 
     this.records = 0;
     this.completed = 0;
+    this.errors = 0;
     this.parse_completed = false;
 
+    this.filename = '';
+    this.invalid_recs = [];
+
     this.validator = new Validator.RecordValidator(conf);
-    this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiograms', conf);
+    this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiogram', conf);
 
-    this.validate = function(file, sheet)
+    this.upload_folder = 'app/uploads';
+}
+
+/**
+ * create a unique filename for the uploaded file.
+ * @param old_name {string} the original file name
+ */
+JusApp.prototype.append_name = function(old_name)
+{
+    return new Date().getTime() + '_' + old_name;
+}
+
+JusApp.prototype.validate = function(file, sheet)
+{
+    this.validator.on('valid', this.validation_success_callback.bind(this) );
+    this.validator.on('invalid', this.validation_fail_callback.bind(this) );
+
+    var parser = new Parser('delimited');
+
+    parser.on('record', this.parse_to_validate.bind(this));
+    parser.on('complete_d', this.validate_parser_complete.bind(this));
+
+    this.filename = file;
+    this.sheet = sheet;
+    parser.parse(this.upload_folder + '/' + file);
+
+    this.write_header();
+};
+
+JusApp.prototype.validate_parser_complete = function()
+{
+    this.parse_completed = true;
+    this.check_and_finish();
+}
+
+JusApp.prototype.validation_success_callback = function(result)
+{
+    this.completed ++;
+    this.submitter.submit(result, this.record_saved.bind(this));
+    this.check_and_finish();
+};
+
+JusApp.prototype.validation_fail_callback = function(result)
+{
+    this.completed ++;
+
+    this.invalid_recs.push(result);
+
+    if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
+
+    this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
+
+    this.check_and_finish();
+};
+
+JusApp.prototype.check_and_finish = function()
+{
+    if( this.parse_completed && (this.records == this.completed) )
     {
-
-
-        this.validator.on('valid', this.validation_success_callback.bind(this) );
-        this.validator.on('invalid', this.validation_fail_callback.bind(this) );
-
-        this.row_tpl = swig.compileFile('validation_row.html');
-
-        var parser = new Parser('delimited');
-
-        parser.on('record', this.parse_to_validate.bind(this));
-        parser.on('complete_d', this.validate_parser_complete.bind(this));
-
-        parser.parse('app/uploads/' + file);
-
-        this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators) }));
-    };
-
-    this.validate_parser_complete = function()
-    {
-        this.parse_completed = true;
-        this.check_and_finish();
-    }
-
-    this.validation_success_callback = function(result)
-    {
-        this.completed ++;
-
-        this.response.write(this.row_tpl({ record: result, result : 'valid' }));
-
-        this.check_and_finish();
-    };
-
-    this.validation_fail_callback = function(result)
-    {
-        this.completed ++;
-
-        this.response.write(this.row_tpl({ record: result, result : 'invalid' }));
-
-        this.check_and_finish();
-    };
-
-    this.check_and_finish = function()
-    {
-        if( this.parse_completed && (this.records == this.completed) )
-        {
-            this.response.write(swig.renderFile('validation_footer.html', {}));
-            this.response.end();
-        }
-    }
-
-    this.parse_to_validate = function(record)
-    {
-        this.records ++;
-
-        this.validator.validate(record.data);
-    };
-
-    this.complete_handler = function(evt)
-    {
-        this.resp_obj.files.push(evt);
-
-        this.files_to_process.splice(this.files_to_process.indexOf(evt.name));
-
-        // wait until all the files have been processed.
-        if(this.files_to_process.length == 0)
-        {
-            var html = swig.renderFile('sheet_preview.html', this.resp_obj );
-            this.response.write(html);
-            this.response.end();
-        }
-    }
-
-    /**
-     * Called for each
-     */
-    this.fileHandler = function(fieldName, file, filename, encoding, mimetype)
-    {
-        this.files_to_process.push(filename);
-
-        if( mimetype == 'text/csv' )
-        {
-            var uploader = new Uploader();
-            var parser = new Parser('delimited');
-
-            uploader.upload(fieldName, file, filename, encoding, mimetype, true);
-
-            parser.on('complete_d', this.complete_handler.bind(this));
-            parser.parse_stream(filename, file, 10);
-
-        }
-    }
-
-    /**
-     * Send the requrest to the right handler
-     */
-    this.router = function(request, response)
-    {
-        var req_url = url.parse(request.url, true);
-        this.resp_obj = { files : [] };
-        this.response = response;
-        this.files_to_process = [];
-
-        if( req_url.pathname == '/uploader/upload' && request.method == 'POST' )
-        {
-            var bb = new busboy({ headers : request.headers });
-
-            bb.on('file', this.fileHandler.bind(this));
-            bb.on('finish', function(){
-                if( !this.files_to_process.length )
-                {
-                    this.response.end('no files');
-                }
-            }.bind(this));
-            request.pipe(bb);
-        }
-        else if( req_url.pathname == '/uploader/validate' )
-        {
-            this.validate(req_url.query.file, req_url.query.sheet);
-        }
-        else
-        {
-            this.response.end('404')
-        }
+        this.write_invalid_records(this.invalid_recs);
+        this.finish();
     }
 }
 
+
+JusApp.prototype.parse_to_validate = function(record)
+{
+    this.records ++;
+    this.validator.validate(record.data);
+};
+
+JusApp.prototype.complete_handler = function(evt)
+{
+    this.resp_obj.files.push(evt);
+
+    this.files_to_process.splice(this.files_to_process.indexOf(evt.name));
+
+    // wait until all the files have been processed.
+    if(this.files_to_process.length == 0)
+    {
+        //if( this.resp_obj.files.length == 1 && this.resp_obj.files[0].sheets
+
+        var html = swig.renderFile('sheet_preview.html', this.resp_obj );
+        this.response.write(html);
+        this.response.end();
+    }
+}
+
+/**
+ * Called for each
+ */
+JusApp.prototype.fileHandler = function(fieldName, file, filename, encoding, mimetype)
+{
+    filename = this.append_name(filename);
+
+    this.files_to_process.push(filename);
+
+    if( mimetype == 'text/csv' )
+    {
+        var uploader = new Uploader();
+        var parser = new Parser('delimited');
+
+        uploader.upload(fieldName, file, filename, encoding, mimetype, true);
+
+        parser.on('complete_d', this.complete_handler.bind(this));
+        parser.parse_stream(filename, file, 10);
+
+    }
+}
+
+JusApp.prototype.proccess_submission = function()
+{
+    var post_data = qs.parse(this.request_body);
+
+    this.filename =  post_data.filename;
+    this.sheet = post_data.sheet;
+
+
+     this.validator.on('valid', this.submit_data_single.bind(this));
+     this.validator.on('invalid', this.single_validation_fail_callback.bind(this) );
+
+     this.validator.validate(post_data);
+}
+
+JusApp.prototype.submit_data = function(data)
+{
+    this.submitter.submit(data, this.record_saved.bind(this));
+};
+
+JusApp.prototype.submit_data_single = function(data)
+{
+    this.submitter.submit(data, this.single_record_saved.bind(this));
+};
+
+JusApp.prototype.on_body_data = function(data)
+{
+    this.request_body += data;
+}
+
+/**
+ *  Handler for save records in the initial upload phase
+ */
+JusApp.prototype.record_saved = function(evt)
+{
+
+}
+
+JusApp.prototype.single_validation_fail_callback = function(result)
+{
+
+}
+
+/**
+ *  Handler for save records submitted by POST
+ */
+JusApp.prototype.single_record_saved = function(evt)
+{
+    //If returning an html form
+
+    var rec_string = JSON.stringify(evt, function(key, value) { if(key == 'success' || key == 'messages') return undefined; else return value; });
+
+    //load JSON file
+    var recs = this.get_invalid_records();
+
+    recs.splice(Number(evt.row),1);
+
+    // replace the JSON in the file
+    this.write_invalid_records(recs);
+
+    this.write_header();
+    this.write_recs(recs);
+    this.finish();
+};
+
+JusApp.prototype.write_header = function()
+{
+    this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators) }));
+};
+
+JusApp.prototype.finish = function()
+{
+    this.response.write(swig.renderFile('validation_footer.html', {}));
+    this.response.end();
+};
+
+JusApp.prototype.write_recs = function(records)
+{
+    if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
+
+    for( var i = 0; i < records.length; i++ )
+    {
+        this.response.write(this.row_tpl({ record: records[i], row: i, result : 'invalid', sheet: this.sheet, filename : this.filename }));
+    }
+};
+
+JusApp.prototype.get_invalid_records = function()
+{
+
+    var filename = this.filename + '_' + this.sheet,
+        fn = path.resolve(this.upload_folder + '/' + filename + '.invalid.json');
+
+    return JSON.parse(fs.readFileSync(fn));
+};
+
+JusApp.prototype.write_invalid_records = function(records)
+{
+    var filename = this.filename + '_' + this.sheet,
+        fn = path.resolve(this.upload_folder + '/' + filename + '.invalid.json');
+
+    fs.writeFile(fn, JSON.stringify(records), function(evt){
+        console.log(evt);
+    });
+};
+
+
+/**
+ * Send the requrest to the right handler
+ */
+JusApp.prototype.router = function(request, response)
+{
+    var req_url = url.parse(request.url, true);
+    this.resp_obj = { files : [] };
+    this.response = response;
+    this.files_to_process = [];
+    this.filename = '';
+
+    if( req_url.pathname == '/uploader/upload' && request.method == 'POST' )
+    {
+        var bb = new busboy({ headers : request.headers });
+
+        bb.on('file', this.fileHandler.bind(this));
+        bb.on('finish', function(){
+            if( !this.files_to_process.length )
+            {
+                this.response.end('no files');
+            }
+        }.bind(this));
+        request.pipe(bb);
+    }
+    else if( req_url.pathname == '/uploader/validate' )
+    {
+        this.validate(req_url.query.file, req_url.query.sheet);
+    }
+    else if( req_url.pathname == '/uploader/submit' )
+    {
+        this.request_body = '';
+        request.on('data', this.on_body_data.bind(this));
+        request.on('end', this.proccess_submission.bind(this));
+    }
+    else
+    {
+        this.response.end('404')
+    }
+}
 
 var app = http.createServer(function(request, response){
     var j_app = new JusApp();
     j_app.router(request, response);
 });
-
-//app.listen(8000);
 
 module.exports = app;

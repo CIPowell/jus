@@ -17,10 +17,12 @@ SQLiteAdpater.prototype.insert = function(record, callback)
 
     for ( var fld in record )
     {
-        args['$' + fld] = record[fld];
+        args['$' + fld] = record[fld].value;
     }
 
-    return this.insert_query.run(args, callback);
+    return this.insert_query.run(args, function(err){
+        callback(record);
+    });
 }
 
 SQLiteAdpater.prototype.get_insert_string = function(table, field_list)
@@ -34,7 +36,8 @@ SQLiteAdpater.prototype.get_insert_string = function(table, field_list)
             qmarks.push('$' + field_list[i]);
         }
 
-        query = util.format(tpl_query, table, field_list.join(', '), qmarks.join(', '))
+        query = util.format(tpl_query, table, field_list.join(', '), qmarks.reverse().join(', '))
+
         return query;
 }
 

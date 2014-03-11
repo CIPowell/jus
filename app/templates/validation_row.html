@@ -1,21 +1,25 @@
-<tr class="{{result}}">
-    <form action="./submit" method="post">
-    {% for field in record %}
+<form action="./submit" method="post">
+    <tr class="{{result}}">
+        <input type="hidden" name="filename" value="{{filename}}" />
+        <input type="hidden" name="sheet" value="{{sheet}}" />
+        <input type="hidden" name="row" value="{{row}}" />
+        {% for field in record %}
 
-        {% if field.success %}
-            <td class="valid">{{field.value}}<input type="hidden" value="{{field.value}}" /></td>
-        {% else %}
-            <td class="invalid">
-                <input type="text" value="{{field.value}}" />
-                {% for msg in field.messages %}
-                    <p class="validation_error">{{msg}}</p>
-                {% endfor %}
+            {% if field.success %}
+                <td class="valid">{{field.value}}<input name="{{field.fieldname}}" type="hidden" value="{{field.value}}" /></td>
+            {% else %}
+                <td class="invalid">
+                    <input name="{{field.fieldname}}" type="text" value="{{field.value}}" />
+                    {% for msg in field.messages %}
+                        <p class="validation_error">{{msg}}</p>
+                    {% endfor %}
+                </td>
+            {% endif %}
+
+        {% endfor %}
+            <td>
+                <input type="submit" value="Submit" name="submit" />
             </td>
-        {% endif %}
 
-    {% endfor %}
-        <td>
-            <input type="submit" value="Submit" name="submit" />
-        </td>
-    </form>
-</tr>
+    </tr>
+</form>

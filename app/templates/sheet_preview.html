@@ -12,14 +12,14 @@
                         {% for row in sheet.rows %}
                         {% if loop.first %}
                             <tr>
-                                {% for key in Object.keys(row) %}
-                                    <th>{{key}}</th>
+                                {% for key in row %}
+                                    <th>{{loop.key}}</th>
                                 {% endfor%}
                             </tr>
                         {% endif %}
                             <tr>
-                                {% for key in Object.keys(row) %}
-                                    <td>{{row[key]}}</td>
+                                {% for key in row %}
+                                    <td>{{key}}</td>
                                 {% endfor%}
                             </tr>
                         {% endfor %}

@@ -143,7 +143,7 @@ RecordValidator.prototype.valid_callback = function(evt)
 RecordValidator.prototype.invalid_callback = function(evt)
 {
     this.success = false;
-    this.results[evt.field] = { success:false, value : evt.value, messages: evt.messages };
+    this.results[evt.field] = { success:false,fieldname :evt.field, value : evt.value, messages: evt.messages };
     this.checkComplete();
 };
 
