@@ -57,7 +57,7 @@ JusApp.prototype.validate = function(file, sheet)
     this.sheet = sheet;
     parser.parse(this.upload_folder + '/' + file);
 
-    this.write_header();
+    this.write_header(false, 'Some records did not pass validation, please correct them and resubmit');
 };
 
 JusApp.prototype.validate_parser_complete = function()
@@ -178,9 +178,16 @@ JusApp.prototype.record_saved = function(evt)
 
 }
 
-JusApp.prototype.single_validation_fail_callback = function(result)
+JusApp.prototype.single_validation_fail_callback = function(evt)
 {
+    var message = 'The record could not be saved, please try again';
 
+    //load JSON file
+    var recs = this.get_invalid_records();
+
+    this.write_header(false, message);
+    this.write_recs(recs);
+    this.finish();
 }
 
 /**
@@ -188,9 +195,7 @@ JusApp.prototype.single_validation_fail_callback = function(result)
  */
 JusApp.prototype.single_record_saved = function(evt)
 {
-    //If returning an html form
-
-    var rec_string = JSON.stringify(evt, function(key, value) { if(key == 'success' || key == 'messages') return undefined; else return value; });
+    var message = 'Record saved Successfully';
 
     //load JSON file
     var recs = this.get_invalid_records();
@@ -200,14 +205,14 @@ JusApp.prototype.single_record_saved = function(evt)
     // replace the JSON in the file
     this.write_invalid_records(recs);
 
-    this.write_header();
+    this.write_header(true, message);
     this.write_recs(recs);
     this.finish();
 };
 
-JusApp.prototype.write_header = function()
+JusApp.prototype.write_header = function(success, message)
 {
-    this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators) }));
+    this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators), success : success, message: message }));
 };
 
 JusApp.prototype.finish = function()
@@ -241,7 +246,7 @@ JusApp.prototype.write_invalid_records = function(records)
         fn = path.resolve(this.upload_folder + '/' + filename + '.invalid.json');
 
     fs.writeFile(fn, JSON.stringify(records), function(evt){
-        console.log(evt);
+
     });
 };
 
