@@ -6,6 +6,8 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.css
+*.DS_Store
 
 pids
 logs
@@ -13,6 +15,5 @@ results
 
 npm-debug.log
 node_modules
-/app/styles/main.css
-/app/uploads/
-/app/styles/main-pfx.css
+app/uploads
+
