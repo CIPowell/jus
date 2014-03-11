@@ -3,11 +3,11 @@
 {% block content %}
     {% for file in files %}
         <section class="file" id="{{file.name}}">
-            <h1>{{file.name}}</h2>
+            <h2>{{file.name}}</h2>
             {% for sheet in file.data.sheets %}
                 <section class="sheet" id="{{file.name}}_{{sheet.name}}">
-                    <h2>{{sheet.name}}</h2>
-                    <a href="./validate?file={{file.name}}&sheet={{sheet.name}}">Use this sheet</a>
+                    <h3>{{sheet.name}}</h3>
+                    <a href="./validate?file={{file.name}}&sheet={{sheet.name}}" class="button">Use this sheet</a>
                     <table>
                         {% for row in sheet.rows %}
                         {% if loop.first %}

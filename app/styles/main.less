@@ -1,6 +1,8 @@
+@highlight-color:rgb(0, 0, 128);
+
 body
 {
-    font-family: droid-sans;
+    font-family: Arial, Helvetica, sans-serif;
     font-size : 12pt;
     line-height: 14pt;
     max-width: 1280px;
@@ -9,7 +11,10 @@ body
 
 h1
 {
-    text-shadow: 0.125em 0.25em #EEE;
+    color : @highlight-color;
+    font-style: italic;
+    border-bottom: 3px solid @highlight-color;
+    padding-bottom: 1rem;
 }
 
 input

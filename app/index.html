@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Jus Demo</title>
+        <title>MLST.net Bulk Uploader</title>
         <link type="text/css" rel="stylesheet" href="styles/main.css" />
     </head>
     <body>
-        <h1>File Dialog form demo</h1>
+        <h1>MLST.net Bulk uploader</h1>
+        <p>Choose a file to upload, currently the uploader only accepts CSV files</p>
         <form action="/uploader/upload" method="POST" enctype="multipart/form-data">
+            <label for="file_to_uploade">Select a CSV file to upload</label>
             <input name="file_to_upload" type="file" />
             <input type="submit" value="Upload" name="submit"/>
         </form>
     </body>
 
-    <script type="text/javascript" src="scripts/JusUploader.js" /></script>
-    <script type="text/javascript" src="scripts/main.js" /></script>
+    <!--<script type="text/javascript" src="scripts/JusUploader.js" /></script>
+    <script type="text/javascript" src="scripts/main.js" /></script>-->
 </html>
