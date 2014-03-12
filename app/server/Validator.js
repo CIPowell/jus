@@ -37,6 +37,11 @@ FieldValidator.prototype = Object.create(events.EventEmitter.prototype, {
  */
 FieldValidator.prototype.validate = function(value)
 {
+    if(this.validators.length == 0){
+        this.testdone();
+        return;
+    }
+
     this.value = value;
 
     for(var r in this.results ){ this.results[r] = undefined; }
