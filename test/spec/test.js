@@ -104,6 +104,7 @@
             int_min_10_fail(9);
             int_min_10_fail(9.9);
             int_min_10_fail(-10);
+            int_min_10_fail(0);
 
         });
 
@@ -115,6 +116,8 @@
             year_pass(2014);
             year_pass('2012');
             year_pass('-1000');
+            year_pass(0);
+            year_fail('false');
 
             year_fail(new Date().getFullYear() + 1);
             year_fail(10000);
