@@ -1,4 +1,8 @@
 @highlight-color:rgb(0, 0, 128);
+@darkGreen: rgb(0, 200, 0);
+@lightGreen: rgb(200, 255, 200);
+@darkRed: rgb(200, 0, 0);
+@lightRed: rgb(255, 200,200);
 
 body
 {
@@ -61,7 +65,7 @@ tr
     &.valid
     {
         td{
-            border-bottom: 3px solid #00FF00;
+            border-bottom: 3px solid @darkGreen;
 
         }
     }
@@ -69,7 +73,7 @@ tr
     &.invalid
     {
         td{
-            border-bottom: 3px solid #FF0000;
+            border-bottom: 3px solid @darkRed;
         }
     }
 }
@@ -88,6 +92,26 @@ td
     {
         background-color: #FFEEEE;
     }
+}
+
+.message
+{
+    padding: 1rem;
+    border: 1px solid blue;
+}
+
+.success
+{
+    border-color: @darkGreen;
+    color:@darkGreen;
+    background: @lightGreen;
+}
+
+.failure, .error
+{
+    border-color: @darkRed;
+    color:@darkRed;
+    background: @lightRed;
 }
 
 @import "./fileinput.less";

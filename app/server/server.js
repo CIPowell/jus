@@ -106,16 +106,24 @@ JusApp.prototype.complete_handler = function(evt)
 {
     this.resp_obj.files.push(evt);
 
-    this.files_to_process.splice(this.files_to_process.indexOf(evt.name));
+    ///this.files_to_process.splice(this.files_to_process.indexOf(evt.name));
 
     // wait until all the files have been processed.
-    if(this.files_to_process.length == 0)
+    if(this.files_to_process.length == this.resp_obj.files.length)
     {
-        //if( this.resp_obj.files.length == 1 && this.resp_obj.files[0].sheets
+        //console.dir(this.resp_obj.files[0].data);
 
-        var html = swig.renderFile('sheet_preview.html', this.resp_obj );
-        this.response.write(html);
-        this.response.end();
+        if( this.resp_obj.files.length == 1 && this.resp_obj.files[0].data.sheets.length == 1 )
+        {
+            //submit the sheet immediately
+            this.validate(this.resp_obj.files[0].name, this.resp_obj.files[0].data.sheets[0].name);
+        }
+        else
+        {
+            var html = swig.renderFile('sheet_preview.html', this.resp_obj );
+            this.response.write(html);
+            this.response.end();
+        }
     }
 }
 

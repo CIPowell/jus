@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Jus Demo</title>
+        <title>MLST.net Bulk Uploader</title>
         <link type="text/css" rel="stylesheet" href="/styles/main-pfx.css" />
     </head>
     <body>
         <h1>Jus</h1>
 
-        <p class="{% if success %}success{% else %}failure{% endif %}">{{message}}</p>
+        <p class="message {% if success %}success{% else %}failure{% endif %}">{{message}}</p>
 
         <table>
             <thead>
