@@ -71,7 +71,7 @@
             num_min_10_fail(-10);
         });
 
-        if('int validator', function(){
+        it('int validator', function(){
             var int = require('../../app/server/validators/int.js');
 
             var int_pass = int.bind({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
@@ -95,8 +95,8 @@
             int_max_10_fail(10.1);
             int_max_10_fail(10000);
 
-            var int_min_10_pass = number.bind({ params : { min : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
-                int_min_10_fail = number.bind({ params : { min : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+            var int_min_10_pass = int.bind({ params : { min : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                int_min_10_fail = int.bind({ params : { min : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
 
             int_min_10_pass(10);
             int_min_10_pass(11);
@@ -104,6 +104,21 @@
             int_min_10_fail(9);
             int_min_10_fail(9.9);
             int_min_10_fail(-10);
+
+        });
+
+        it('Before Current Year Validator', function(){
+           var f =  require('../../app/server/validators/year_to_current.js'),
+               year_pass = f.bind({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                year_fail = f.bind({ params : {}, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            year_pass(2014);
+            year_pass('2012');
+            year_pass('-1000');
+
+            year_fail(new Date().getFullYear() + 1);
+            year_fail(10000);
+            year_fail('Ten thousand');
 
         });
 
