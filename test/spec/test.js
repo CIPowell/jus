@@ -42,5 +42,70 @@
                 }},'01aa2');
         });
 
+        it('number validators', function(){
+            var number = require('../../app/server/validators/number.js');
+
+            number.call({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}, 0);
+            number.call({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}, 10);
+            number.call({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}, 10.2);
+            number.call({ params : {}, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}}, 'bah');
+
+            var num_max_10_pass = number.bind({ params : { max : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                num_max_10_fail = number.bind({ params : { max : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            num_max_10_pass(0);
+            num_max_10_pass(10);
+            num_max_10_pass(-1000);
+            num_max_10_fail(11);
+            num_max_10_fail(10.1);
+            num_max_10_fail(10000);
+
+            var num_min_10_pass = number.bind({ params : { min : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                num_min_10_fail = number.bind({ params : { min : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            num_min_10_pass(10);
+            num_min_10_pass(11);
+            num_min_10_pass(1000);
+            num_min_10_fail(9);
+            num_min_10_fail(9.9);
+            num_min_10_fail(-10);
+        });
+
+        if('int validator', function(){
+            var int = require('../../app/server/validators/int.js');
+
+            var int_pass = int.bind({ params : {}, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                int_fail = int.bind({ params : {}, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            int_pass(1);
+            int_pass(-1000);
+            int_pass('2014');
+
+            int_fail('bah');
+            int_fail(1.201201);
+            int_fail('1122.2121');
+
+            var int_max_10_pass = int.bind({ params : { max : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                int_max_10_fail = int.bind({ params : { max : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            int_max_10_pass(0);
+            int_max_10_pass(10);
+            int_max_10_pass(-1000);
+            int_max_10_fail(11);
+            int_max_10_fail(10.1);
+            int_max_10_fail(10000);
+
+            var int_min_10_pass = number.bind({ params : { min : 10 }, valid : function(){assert.ok(true);}, invalid : function(){assert.ok(false);}}),
+                int_min_10_fail = number.bind({ params : { min : 10 }, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
+
+            int_min_10_pass(10);
+            int_min_10_pass(11);
+            int_min_10_pass(1000);
+            int_min_10_fail(9);
+            int_min_10_fail(9.9);
+            int_min_10_fail(-10);
+
+        });
+
     });
 })();
