@@ -4,18 +4,18 @@ module.exports = function(value)
 
     if(isNaN(x))
     {
-        this.invalid('Value is not a number');
+        this.invalid('number', 'Value is not a number');
     }
     else if ( this.params.min && x < this.params.min )
     {
-        this.invalid('Value must be equal to or greater than ' + this.params.min);
+        this.invalid('number', 'Value must be equal to or greater than ' + this.params.min);
     }
     else if ( this.params.max && x > this.params.max )
     {
-        this.invalid('Value must be equal to or less than ' + this.params.max);
+        this.invalid('number', 'Value must be equal to or less than ' + this.params.max);
     }
     else
     {
-        this.valid();
+        this.valid('number');
     }
 }
