@@ -145,7 +145,6 @@ JusApp.prototype.fileHandler = function(fieldName, file, filename, encoding, mim
 
         parser.on('complete_d', this.complete_handler.bind(this));
         parser.parse_stream(filename, file, 10);
-
     }
 }
 
@@ -156,11 +155,10 @@ JusApp.prototype.proccess_submission = function()
     this.filename =  post_data.filename;
     this.sheet = post_data.sheet;
 
+    this.validator.on('valid', this.submit_data_single.bind(this));
+    this.validator.on('invalid', this.single_validation_fail_callback.bind(this) );
 
-     this.validator.on('valid', this.submit_data_single.bind(this));
-     this.validator.on('invalid', this.single_validation_fail_callback.bind(this) );
-
-     this.validator.validate(post_data);
+    this.validator.validate(post_data);
 }
 
 JusApp.prototype.submit_data = function(data)
@@ -192,6 +190,10 @@ JusApp.prototype.single_validation_fail_callback = function(evt)
 
     //load JSON file
     var recs = this.get_invalid_records();
+
+    recs[0] = evt;
+
+    this.write_invalid_records(recs);
 
     this.write_header(false, message);
     this.write_recs(recs);
