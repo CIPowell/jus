@@ -6,11 +6,12 @@ var events = require('events');
  *
  * We spawn a fieldvalidator class per field....
  */
-var FieldValidator = function (field_name, validators)
+var FieldValidator = function (field_name, validators, db_connection)
 {
     this.field_name = field_name;
     this.validators = []
     this.results = {};
+    this.db = db_connection;
 
     for( var i = validators.length; i-- ; )
     {
@@ -35,7 +36,7 @@ FieldValidator.prototype = Object.create(events.EventEmitter.prototype, {
 /**
  * start the validation of a field, lo
  */
-FieldValidator.prototype.validate = function(value)
+FieldValidator.prototype.validate = function(record)
 {
     if(this.validators.length == 0){
         this.testdone();
@@ -49,7 +50,7 @@ FieldValidator.prototype.validate = function(value)
     for( var v in this.validators )
     {
         //fire off all the validators ... responses will be collected
-        this.validators[v](value);
+        this.validators[v](record[this.field_name, record);
     }
 };
 
@@ -94,13 +95,13 @@ FieldValidator.prototype.invalid = function(testname, messages)
 /**
  * A class that validates records, spec should be in the format { fieldname : [{ name : <>, params: <> }, ... ] }
  */
-var RecordValidator = function (spec)
+var RecordValidator = function (spec, db_connection)
 {
     this.validators = {};
 
     for( var field_name in spec )
     {
-        this.validators[field_name] = new FieldValidator(field_name, spec[field_name].validators);
+        this.validators[field_name] = new FieldValidator(field_name, spec[field_name].validators, db_connection);
         this.validators[field_name].on('valid', this.valid_callback.bind(this));
         this.validators[field_name].on('invalid', this.invalid_callback.bind(this));
     }
@@ -135,7 +136,7 @@ RecordValidator.prototype.validate = function(record)
 
     for ( var field_name in this.validators )
     {
-        this.validators[field_name].validate(record[field_name]);
+        this.validators[field_name].validate(record);
     }
 };
 

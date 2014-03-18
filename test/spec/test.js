@@ -114,7 +114,7 @@
                 year_fail = f.bind({ params : {}, valid : function(){assert.ok(false);}, invalid : function(){assert.ok(true);}});
 
             year_pass(2014);
-            year_pass('2012');
+            year_pass('2012', {});
             year_pass('-1000');
             year_pass(0);
             year_fail('false');
@@ -124,6 +124,65 @@
             year_fail('Ten thousand');
 
         });
+    });
+
+    describe('db-dependent-validator tests', function(){
+        beforeEach(function(){
+            var indb = require('../../app/server/validators/exists_in_db.js'),
+               conn = require('../../app/server/databases/mssql.js'),
+               conf = require('../../app/conf.js');
+
+            this.db = new conn(conf.db, function(err){})
+            this.indb = indb;
+        });
+
+        it('is in db', function(done)
+           {
+               var params = {
+                    table: 'sts',
+                    field : 'aroe',
+                    conditions : { aroe : 1 }
+               };
+               var v = this.indb.bind({ db: this.db, params : params, valid: function(){done()}, invalid : function(name,msg){done(new Error(msg));}});
+               v(1, {'aroe' : 1});
+           });
+
+        it('is in db2', function(done)
+           {
+               var params = {
+                    table: 'sts',
+                    field : 'aroe',
+                    conditions : { gdh_ : 1 }
+               };
+               var v = this.indb.bind({ db: this.db, params : params, valid: function(){done()}, invalid : function(name,msg){done(new Error(msg));}});
+               v(1, {'gdh_' : 1});
+           });
+
+        it('is in db_multi', function(done)
+           {
+               var params = {
+                    table: 'sts',
+                    field : 'ref',
+                    conditions : { aroe : 1, gdh_ : 1, gki_ : 1, recP : 1, spi_ : 1, xpt_ : 1, ddl_ : 1 }
+               };
+
+               var v = this.indb.bind({ db: this.db, params : params, valid: function(){done()}, invalid : function(name,msg){done(new Error(msg));}});
+
+               v(1, { aroe : 1, gdh_ : 1, gki_ : 1, recP : 1, spi_ : 1, xpt_ : 1, ddl_ : 1 });
+           });
+
+        it('is in db_multi_with extras in record', function(done)
+           {
+               var params = {
+                    table: 'sts',
+                    field : 'ref',
+                    conditions : { aroe : 1, gdh_ : 1, gki_ : 1, recP : 1, spi_ : 1, xpt_ : 1, ddl_ : 1 }
+               };
+
+               var v = this.indb.bind({ db: this.db, params : params, valid: function(){done()}, invalid : function(name,msg){done(new Error(msg));}});
+
+               v(1, { aroe : 1, gdh_ : 1, gki_ : 1, recP : 1, spi_ : 1, xpt_ : 1, ddl_ : 1, foo: 'bar' });
+           });
 
     });
 })();

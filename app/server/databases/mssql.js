@@ -19,7 +19,6 @@ MSSQL_Adapter.prototype.insert = function(record, callback)
     var request = new mssql.Request(this.db);
 
     request.query(this.insert_query, function(err){
-        console.log(err);
         callback(err, record);
     });
 }
@@ -35,9 +34,7 @@ MSSQL_Adapter.prototype.select = function(query, record, callback)
 
     var request = new mssql.Request(this.db);
 
-    request.query(query, function(err, recordset){
-        callback(err, recordset);
-    });
+    request.query(query, callback);
 }
 
 MSSQL_Adapter.prototype.get_insert_string = function(table, field_list)

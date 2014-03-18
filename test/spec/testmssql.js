@@ -24,8 +24,11 @@
 
             db.select(qry, {id : 1}, function(err, recordset)
               {
-
                   done(err);
+
+                  for(var i = 0; i < recordset.length; i++) {
+                        assert(recordset[i].id == 1);
+                    }
               });
 
         });
