@@ -18,7 +18,9 @@ var FieldValidator = function (field_name, validators, db_connection)
         this.validators.push(require('./validators/' + validators[i].name).bind({
             params : validators[i].params,
             valid : this.valid.bind(this),
-            invalid : this.invalid.bind(this)
+            invalid : this.invalid.bind(this),
+            db : this.db,
+            message: validators[i].message
         }));
 
         this.results[validators[i].name] = undefined;
@@ -36,21 +38,21 @@ FieldValidator.prototype = Object.create(events.EventEmitter.prototype, {
 /**
  * start the validation of a field, lo
  */
-FieldValidator.prototype.validate = function(record)
+FieldValidator.prototype.validate = function(value, record)
 {
+    this.value = record[this.field_name];
+
     if(this.validators.length == 0){
         this.testdone();
         return;
     }
-
-    this.value = value;
 
     for(var r in this.results ){ this.results[r] = undefined; }
 
     for( var v in this.validators )
     {
         //fire off all the validators ... responses will be collected
-        this.validators[v](record[this.field_name, record);
+        this.validators[v](value, record);
     }
 };
 
@@ -58,6 +60,7 @@ FieldValidator.prototype.testdone = function()
 {
     var valid= true;
     var messages = [];
+
     for( var name in this.results )
     {
         if( this.results[name] === undefined ){
@@ -136,7 +139,7 @@ RecordValidator.prototype.validate = function(record)
 
     for ( var field_name in this.validators )
     {
-        this.validators[field_name].validate(record);
+        this.validators[field_name].validate(record[field_name], record);
     }
 };
 

@@ -18,6 +18,8 @@ var http = require('http'),
 
 function JusApp()
 {
+    this.db_driver = require('./databases/' + conf.db.type);
+
     swig.setDefaults({ loader: swig.loaders.fs(__dirname + '/../templates' )});
 
     this.records = 0;
@@ -28,7 +30,7 @@ function JusApp()
     this.filename = '';
     this.invalid_recs = [];
 
-    this.validator = new Validator.RecordValidator(conf.field_defs);
+
     //this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiogram', conf);
 
     this.upload_folder = conf.upload_dir;
@@ -62,8 +64,6 @@ JusApp.prototype.get_extenstion = function(filename)
 
 JusApp.prototype.validate = function(file, sheet)
 {
-    this.validator.on('valid', this.validation_success_callback.bind(this) );
-    this.validator.on('invalid', this.validation_fail_callback.bind(this) );
 
     var parser = new Parser(this.get_parser_name(file));
 
@@ -121,7 +121,10 @@ JusApp.prototype.check_and_finish = function()
 JusApp.prototype.parse_to_validate = function(record)
 {
     this.records ++;
-    this.validator.validate(record.data);
+    var validator = new Validator.RecordValidator(conf.field_defs, new this.db_driver(conf.db, function(err){}));
+    validator.on('valid', this.validation_success_callback.bind(this) );
+    validator.on('invalid', this.validation_fail_callback.bind(this) );
+    validator.validate(record.data);
 };
 
 JusApp.prototype.complete_handler = function(evt)
@@ -158,15 +161,13 @@ JusApp.prototype.fileHandler = function(fieldName, file, filename, encoding, mim
 
     this.files_to_process.push(filename);
 
-     console.log(this.get_extenstion(filename), this.get_parser_name(filename));
+    var uploader = new Uploader();
+    var parser = new Parser(this.get_parser_name(filename));
 
-        var uploader = new Uploader();
-        var parser = new Parser(this.get_parser_name(filename));
+    uploader.upload(fieldName, file, filename, encoding, mimetype, true);
 
-        uploader.upload(fieldName, file, filename, encoding, mimetype, true);
-
-        parser.on('complete_d', this.complete_handler.bind(this));
-        parser.parse_stream(filename, file, 10);
+    parser.on('complete_d', this.complete_handler.bind(this));
+    parser.parse_stream(filename, file, 10);
 
 }
 
@@ -246,7 +247,7 @@ JusApp.prototype.single_record_saved = function(evt)
 
 JusApp.prototype.write_header = function(success, message)
 {
-    this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(this.validator.validators), success : success, message: message }));
+    this.response.write(swig.renderFile('validation_header.html', { fields : Object.keys(conf.field_defs), success : success, message: message }));
 };
 
 JusApp.prototype.finish = function()
@@ -302,7 +303,6 @@ JusApp.prototype.router = function(request, response)
     }
     else if( req_url.pathname.match(/^\/(styles|scripts)\//) )
     {
-        console.log(process.cwd());
         fs.readFile('app/' + req_url.pathname, function(err, data)
         {
             this.response.end(data);

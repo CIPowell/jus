@@ -56,18 +56,24 @@ MSSQL_Adapter.prototype.get_insert_string = function(table, field_list)
 
 MSSQL_Adapter.prototype.get_select_string = function(table, field_list, condition_list)
 {
-    var tpl_query = "SELECT %s FROM %s WHERE %s;",
+    var tpl_query = "SELECT [%s] FROM [%s] WHERE %s;",
         query,
         qmarks = [];
 
-        condition_list = Object.keys(condition_list);
 
-        for( var i = condition_list.length; i--; )
+        for( var i in condition_list )
         {
-            qmarks.push(condition_list[i] + ' = ' + '$' + condition_list[i]);
+            if( condition_list[i] )
+            {
+                qmarks.push('[' + i + '] = ' + '$' + condition_list[i]);
+            }
+            else
+            {
+                qmarks.push('[' + i + '] = ' + '$' + i);
+            }
         }
 
-        query = util.format(tpl_query, field_list.join(', '), table,  qmarks.reverse().join(' AND '))
+        query = util.format(tpl_query, field_list.join('], ['), table,  qmarks.reverse().join(' AND '))
 
         return query;
 }

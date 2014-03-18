@@ -15,12 +15,12 @@
             var db = new mssql(conf.db, function(err){});
 
             db.prepare_insert('profiles_test', {
-              "id": {}
+              "id": undefined
             });
 
             db.insert({'id' : '1'}, function(err){  });
 
-            var qry =db.prepare_select ('profiles_test', {'id' : ''}, {'id' : {}});
+            var qry = db.prepare_select ('profiles_test', {'id' : undefined}, {'id' : undefined});
 
             db.select(qry, {id : 1}, function(err, recordset)
               {
