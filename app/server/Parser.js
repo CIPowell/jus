@@ -7,7 +7,7 @@ var events = require('events');
  */
 function Parser(parser_name, config)
 {
-    var _Parser = require('./parsers/' + parser_name).Parser;
+    var _Parser = require('./parsers/' + parser_name + '.js');
     this.parser = new _Parser(config);
 }
 

@@ -1,7 +1,7 @@
 module.exports = {
     less:{
         files :{
-            'app/styles/main.css' :'app/styles/main.less'
+            'app/styles/main-pre.css' :'app/styles/main.less'
         }
     }
 }

@@ -1,12 +1,13 @@
 var events = require('events'),
     path = require('path'),
-    fs = require('fs');
+    fs = require('fs'),
+    conf = require('../conf.js');
 
 function Uploader (upload_dir){
 
     events.EventEmitter.call(this);
 
-    this.directory =  './app/uploads/';
+    this.directory = conf.upload_dir;
     this.ctrls = {};
 };
 
@@ -46,7 +47,7 @@ Uploader.prototype.upload = function(fieldname, filestream, filename, encoding, 
 {
     if(to_disk)
     {
-        var target_path = path.resolve(this.directory + filename);
+        var target_path = path.resolve(this.directory + '/'+ filename);
         this.readstream = filestream;
 
         //fs.open(target_path, 'w+', this.open_callback.bind(this));

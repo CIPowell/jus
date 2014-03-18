@@ -12,3 +12,12 @@ serve:
 
 test:
    - 'mochaTest'
+
+build-css:
+   - 'less'
+   - 'autoprefixer'
+   - 'cssmin'
+   - 'copy:css'
+
+build:
+    - 'concurrent:build'

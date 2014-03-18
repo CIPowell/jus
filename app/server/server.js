@@ -6,7 +6,7 @@ var http = require('http'),
     Uploader = require('./Uploader.js'),
     Parser = require('./Parser.js'),
     Validator = require('./Validator.js'),
-    Submitter = require('./Submitter.js'),
+    // Submitter = require('./Submitter.js'),
     url = require('url'),
     swig = require('swig'),
     busboy = require('busboy'),
@@ -28,10 +28,10 @@ function JusApp()
     this.filename = '';
     this.invalid_recs = [];
 
-    this.validator = new Validator.RecordValidator(conf);
-    this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiogram', conf);
+    this.validator = new Validator.RecordValidator(conf.field_defs);
+    //this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiogram', conf);
 
-    this.upload_folder = 'app/uploads';
+    this.upload_folder = conf.upload_dir;
 }
 
 /**
@@ -40,7 +40,24 @@ function JusApp()
  */
 JusApp.prototype.append_name = function(old_name)
 {
-    return new Date().getTime() + '_' + old_name;
+    return 'jus_' + new Date().getTime() + '_' + old_name;
+}
+
+
+JusApp.prototype.get_parser_name = function(filename)
+{
+    var parsers = {
+        'csv' : 'delimited',
+        'xls' : 'xls',
+        'xlsx' : 'xls'
+    };
+
+    return parsers[this.get_extenstion(filename)];
+}
+
+JusApp.prototype.get_extenstion = function(filename)
+{
+    return filename.substr(filename.lastIndexOf('.') + 1)
 }
 
 JusApp.prototype.validate = function(file, sheet)
@@ -48,7 +65,7 @@ JusApp.prototype.validate = function(file, sheet)
     this.validator.on('valid', this.validation_success_callback.bind(this) );
     this.validator.on('invalid', this.validation_fail_callback.bind(this) );
 
-    var parser = new Parser('delimited');
+    var parser = new Parser(this.get_parser_name(file));
 
     parser.on('record', this.parse_to_validate.bind(this));
     parser.on('complete_d', this.validate_parser_complete.bind(this));
@@ -69,7 +86,12 @@ JusApp.prototype.validate_parser_complete = function()
 JusApp.prototype.validation_success_callback = function(result)
 {
     this.completed ++;
-    this.submitter.submit(result, this.record_saved.bind(this));
+    //this.submitter.submit(result, this.record_saved.bind(this));
+      if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
+
+    this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
+
+
     this.check_and_finish();
 };
 
@@ -136,16 +158,16 @@ JusApp.prototype.fileHandler = function(fieldName, file, filename, encoding, mim
 
     this.files_to_process.push(filename);
 
-    if( mimetype == 'text/csv' )
-    {
+     console.log(this.get_extenstion(filename), this.get_parser_name(filename));
+
         var uploader = new Uploader();
-        var parser = new Parser('delimited');
+        var parser = new Parser(this.get_parser_name(filename));
 
         uploader.upload(fieldName, file, filename, encoding, mimetype, true);
 
         parser.on('complete_d', this.complete_handler.bind(this));
         parser.parse_stream(filename, file, 10);
-    }
+
 }
 
 JusApp.prototype.proccess_submission = function()
@@ -163,12 +185,14 @@ JusApp.prototype.proccess_submission = function()
 
 JusApp.prototype.submit_data = function(data)
 {
-    this.submitter.submit(data, this.record_saved.bind(this));
+   // this.submitter.submit(data, this.record_saved.bind(this));
+    this.record_saved.call(this, data);
 };
 
 JusApp.prototype.submit_data_single = function(data)
 {
-    this.submitter.submit(data, this.single_record_saved.bind(this));
+    //this.submitter.submit(data, this.single_record_saved.bind(this));
+     this.single_record_saved.call(this, data);
 };
 
 JusApp.prototype.on_body_data = function(data)
@@ -272,7 +296,19 @@ JusApp.prototype.router = function(request, response)
     this.files_to_process = [];
     this.filename = '';
 
-    if( req_url.pathname == '/uploader/upload' && request.method == 'POST' )
+    if( req_url.pathname == '/' )
+    {
+        this.response.end(swig.renderFile('index.html', {}));
+    }
+    else if( req_url.pathname.match(/^\/(styles|scripts)\//) )
+    {
+        console.log(process.cwd());
+        fs.readFile('app/' + req_url.pathname, function(err, data)
+        {
+            this.response.end(data);
+        }.bind(this));
+    }
+    else if( req_url.pathname == '/upload' && request.method == 'POST' )
     {
         var bb = new busboy({ headers : request.headers });
 
@@ -285,11 +321,11 @@ JusApp.prototype.router = function(request, response)
         }.bind(this));
         request.pipe(bb);
     }
-    else if( req_url.pathname == '/uploader/validate' )
+    else if( req_url.pathname == '/validate' )
     {
         this.validate(req_url.query.file, req_url.query.sheet);
     }
-    else if( req_url.pathname == '/uploader/submit' )
+    else if( req_url.pathname == '/submit' )
     {
         this.request_body = '';
         request.on('data', this.on_body_data.bind(this));

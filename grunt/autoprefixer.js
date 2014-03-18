@@ -3,7 +3,7 @@ module.exports = {
         options: {
             browsers: ['last 2 version', 'Explorer 8']
         },
-        src: 'app/styles/main.css',
-        dest: 'app/styles/main-pfx.css'
+        src: 'app/styles/main-pre.css',
+        dest: 'app/styles/main.css'
     }
 }

@@ -2,18 +2,19 @@
 <html>
     <head>
         <title>MLST.net Bulk Uploader</title>
-        <link type="text/css" rel="stylesheet" href="/styles/main-pfx.css" />
+        <link type="text/css" rel="stylesheet" href="styles/main.css" />
     </head>
     <body>
-        <h1>Jus</h1>
+        <h1>MLST.net Bulk Uploader</h1>
 
         <p class="message {% if success %}success{% else %}failure{% endif %}">{{message}}</p>
+        <div class="overflow-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for fld in fields %}
+                            <th>{{ fld }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
 
-        <table>
-            <thead>
-                <tr>
-                    {% for fld in fields %}
-                        <th>{{ fld }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>

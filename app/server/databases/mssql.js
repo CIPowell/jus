@@ -2,28 +2,45 @@ var util = require('util'),
     mssql = require('mssql');
 
 
-var MSSQL = function(params)
+var MSSQL_Adapter = function(params, callback)
 {
-    this.db = mssql.Connection(params);
+    this.db = new mssql.Connection(params, callback);
 };
 
-SQLiteAdpater.prototype.insert = function(record, callback)
+MSSQL_Adapter.prototype.insert = function(record, callback)
 {
     if(!this.insert_query) throw 'no insert query prepared';
 
     for ( var fld in record )
     {
-        this.insert_query.replace('$' + fld, record[fld]);
+        this.insert_query = this.insert_query.replace('$' + fld, record[fld]);
     }
 
     var request = new mssql.Request(this.db);
 
-    return requrest.query(this.insert_query, function(err){
-        callback(record);
+    request.query(this.insert_query, function(err){
+        console.log(err);
+        callback(err, record);
     });
 }
 
-SQLiteAdpater.prototype.get_insert_string = function(table, field_list)
+MSSQL_Adapter.prototype.select = function(query, record, callback)
+{
+    if(!query) throw 'no insert query prepared';
+
+    for ( var fld in record )
+    {
+        query = query.replace('$' + fld, record[fld]);
+    }
+
+    var request = new mssql.Request(this.db);
+
+    request.query(query, function(err, recordset){
+        callback(err, recordset);
+    });
+}
+
+MSSQL_Adapter.prototype.get_insert_string = function(table, field_list)
 {
     var tpl_query = "INSERT INTO %s (%s) VALUES (%s);",
         query,
@@ -40,7 +57,25 @@ SQLiteAdpater.prototype.get_insert_string = function(table, field_list)
         return query;
 }
 
-SQLiteAdpater.prototype.prepare_insert = function(table, fielddefs)
+MSSQL_Adapter.prototype.get_select_string = function(table, field_list, condition_list)
+{
+    var tpl_query = "SELECT %s FROM %s WHERE %s;",
+        query,
+        qmarks = [];
+
+        condition_list = Object.keys(condition_list);
+
+        for( var i = condition_list.length; i--; )
+        {
+            qmarks.push(condition_list[i] + ' = ' + '$' + condition_list[i]);
+        }
+
+        query = util.format(tpl_query, field_list.join(', '), table,  qmarks.reverse().join(' AND '))
+
+        return query;
+}
+
+MSSQL_Adapter.prototype.prepare_insert = function(table, fielddefs)
 {
     this.fielddefs = fielddefs;
 
@@ -50,5 +85,15 @@ SQLiteAdpater.prototype.prepare_insert = function(table, fielddefs)
     this.insert_query = query;
 }
 
+MSSQL_Adapter.prototype.prepare_select = function(table, fielddefs, conditions)
+{
+    this.fielddefs = fielddefs;
 
-module.exports = MSSQL;
+    var field_list = Object.keys(fielddefs),
+        query= this.get_select_string(table ,field_list, conditions);
+
+    return query;
+}
+
+
+module.exports = MSSQL_Adapter;

@@ -91,4 +91,4 @@ Parser.prototype.get_rows = function(sheet, n)
     return this.data.slice(0, n);
 }
 
-module.exports = { Parser : Parser };
+module.exports = Parser;
