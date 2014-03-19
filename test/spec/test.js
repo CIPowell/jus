@@ -185,4 +185,55 @@
            });
 
     });
+    
+    describe('Submitter tests', function(){
+       it('Should use conf to change the field', function(){
+           var Submitter = require('../../app/server/Submitter.js');
+                                
+           
+           var sub = new Submitter('null', {},'null',{
+                'foo' : {
+                    transforms: [
+                        { name:'blackhole' }
+                    ]
+                }
+           });
+           
+           var record = { 'foo' : 'bar', 'one' : 'two' },
+               new_record = sub.transform(record);
+           
+           assert.deepEqual(new_record, { 'one' : 'two' }); 
+       });
+        
+   it('Should use conf to change the field 2', function(){        
+            var Submitter = require('../../app/server/Submitter.js');
+                                
+           
+           var sub = new Submitter('null', {},'null',{
+                'foo' : {
+                    transforms: [
+                        { name:'blackhole' }
+                    ]
+                },
+               'one' :{
+                    transforms :[
+                        {
+                            name: 'rename',
+                            params : {
+                                name : 'new'
+                            }
+                        }
+                    ]
+               }
+           });
+           
+           
+           var record2 = { 'foo' : 'bar', 'one': 'two' },
+               new_record2 = sub.transform(record2);
+           
+           assert.deepEqual(new_record2, { 'new': 'two' });
+           
+           
+       });
+    });
 })();

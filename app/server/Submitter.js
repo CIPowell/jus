@@ -1,6 +1,5 @@
 var Submitter = function(db_type, con_params, tablename, fieldlist)
 {
-  //TODO: Translator
     this.adapter = require('../../app/server/databases/' + db_type);
     this.connection = new this.adapter(con_params)
 
@@ -13,7 +12,7 @@ Submitter.prototype.transform = function(record)
 {
     var results = {};
 
-    for( var fld in this.fielddefs )
+    for( var fld in record )
     {
         results = this.transform_field(fld, record[fld], results);
     }
@@ -25,17 +24,27 @@ Submitter.prototype.transform = function(record)
 
 Submitter.prototype.transform_field = function(field_name, value, results_object)
 {
-    var transformers = this.fielddefs[field_name].transforms,
-        obj = { field_name : field_name, value : value }
-
-    for( var t in transformers )
+    var obj = { field_name : field_name, value : value };
+    
+    if(this.fielddefs[field_name])
     {
-        var t_f = require('../../app/server/transforms/' + transformers[t].name + '.js').bind(transformers[t]);
-        t_f(obj);
+        var transformers = this.fielddefs[field_name].transforms;
+        
+        for( var t in transformers )
+        {
+            var t_params = transformers[t];
 
+            t_params.db = this.connection;
+
+            var t_f = require('../../app/server/transforms/' + transformers[t].name + '.js').bind(t_params);
+            t_f(obj);
+
+        }
     }
-
-    results_object[obj.field_name] = obj.value;
+    if( obj.field_name ) // basically to handle "blackhole"
+    {
+        results_object[obj.field_name] = obj.value;
+    }
     return results_object;
 }
 
