@@ -127,10 +127,11 @@ RecordValidator.prototype.validate_field = function(field_name, value)
 /**
  *
  */
-RecordValidator.prototype.validate = function(record)
+RecordValidator.prototype.validate = function(record, n)
 {
     this.success = true;
     this.results = {};
+    this.n = n;
 
     for ( var field_name in this.validators )
     {
@@ -162,12 +163,13 @@ RecordValidator.prototype.checkComplete = function(evt)
 
     for( var fld in this.results )
     {
+        if(fld == 'n') continue;
         if(this.results[fld].success === undefined){ return; }
 
         success = success & this.results[fld].success;
     }
 
-    this.emit(success ? 'valid' : 'invalid', this.results);
+    this.emit(success ? 'valid' : 'invalid', this.results, this.n);
 };
 
 module.exports = { RecordValidator : RecordValidator, FieldValidator : FieldValidator };

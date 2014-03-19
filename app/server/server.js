@@ -29,7 +29,7 @@ function JusApp()
 
     this.filename = '';
     this.invalid_recs = [];
-
+    this.records_ = [];
 
     //this.submitter = new Submitter('sqlite', { 'filename': 'test.db'}, 'Antibiogram', conf);
 
@@ -74,7 +74,7 @@ JusApp.prototype.validate = function(file, sheet)
     this.sheet = sheet;
     parser.parse(this.upload_folder + '/' + file);
 
-    this.write_header(false, 'Some records did not pass validation, please correct them and resubmit');
+    //this.write_header(false, 'Some records did not pass validation, please correct them and resubmit');
 };
 
 JusApp.prototype.validate_parser_complete = function()
@@ -83,27 +83,28 @@ JusApp.prototype.validate_parser_complete = function()
     this.check_and_finish();
 }
 
-JusApp.prototype.validation_success_callback = function(result)
+JusApp.prototype.validation_success_callback = function(result, n)
 {
     this.completed ++;
     //this.submitter.submit(result, this.record_saved.bind(this));
-      if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
+     // if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
 
-    this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
-
+    //this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
+    this.records_[n] = result;
 
     this.check_and_finish();
 };
 
-JusApp.prototype.validation_fail_callback = function(result)
+JusApp.prototype.validation_fail_callback = function(result, n)
 {
     this.completed ++;
-
+    this.errors++;
     this.invalid_recs.push(result);
 
-    if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
+    this.records_[n] = result;
+    //if(! this.row_tpl ) this.row_tpl = swig.compileFile('validation_row.html');
 
-    this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
+    //this.response.write(this.row_tpl({ record: result, row: this.errors++, result : 'invalid', sheet: this.sheet, filename : this.filename }));
 
     this.check_and_finish();
 };
@@ -112,6 +113,17 @@ JusApp.prototype.check_and_finish = function()
 {
     if( this.parse_completed && (this.records == this.completed) )
     {
+        var row_tpl = swig.compileFile('validation_row.html');
+
+        this.write_header(!this.invalid_recs.length, this.invalid_recs.length ? 'There were some errors in the file, please update and resubmit' : 'the file uploaded successfully');
+
+        for(var i = 0; i < this.records_.length; i++)
+        {
+
+            this.response.write(row_tpl({ record: this.records_[i], row: this.errors, result : this.records_[i].result, sheet: this.sheet, filename : this.filename }));
+        }
+
+
         this.write_invalid_records(this.invalid_recs);
         this.finish();
     }
@@ -124,7 +136,7 @@ JusApp.prototype.parse_to_validate = function(record)
     var validator = new Validator.RecordValidator(conf.field_defs, new this.db_driver(conf.db, function(err){}));
     validator.on('valid', this.validation_success_callback.bind(this) );
     validator.on('invalid', this.validation_fail_callback.bind(this) );
-    validator.validate(record.data);
+    validator.validate(record.data, record.n);
 };
 
 JusApp.prototype.complete_handler = function(evt)
