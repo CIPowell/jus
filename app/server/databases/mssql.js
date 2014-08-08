@@ -58,24 +58,57 @@ MSSQL_Adapter.prototype.get_select_string = function(table, field_list, conditio
 {
     var tpl_query = "SELECT [%s] FROM [%s] WHERE %s;",
         query,
-        qmarks = [];
+        qmarks = [],
+        fields = [];
 
-
-        for( var i in condition_list )
+    if( !condition_list ) condition_list = [];
+        
+    for( var i = 0; i < field_list.length; i++ )
+    {
+        if( typeof field_list[i] == 'string' )
         {
-            if( condition_list[i] )
+            fields.push(util.format('[%s]', field_list[i]))
+        }
+        else if ( typeof field_list[i] == 'object' )
+        {
+            var fld_str = ''
+            
+            if( field_list[i].func )
             {
-                qmarks.push('[' + i + '] = ' + '$' + condition_list[i]);
+                fld_str = util.format('%s([%s])', field_list[i].func, field_list[i].name);
             }
             else
-            {
-                qmarks.push('[' + i + '] = ' + '$' + i);
+            {   
+                fld_str = util.format('[%s]', field_list[i].name);
             }
+            
+            fields.push(fld_str);
         }
+    }
+    
+    for( var i in condition_list )
+    {
+        if( condition_list[i] )
+        {
+            qmarks.push('[' + i + '] = ' + '$' + condition_list[i]);
+        }
+        else
+        {
+            qmarks.push('[' + i + '] = ' + '$' + i);
+        }
+    }
 
-        query = util.format(tpl_query, field_list.join('], ['), table,  qmarks.reverse().join(' AND '))
+    if( condition_list.length == 0 )
+    {
+        tpl_query = "SELECT [%s] FROM [%s]";
+        query = util.format(tpl_query, field_list.join(', '), table)
+    }
+    else
+    {
+        query = util.format(tpl_query, field_list.join(', '), table,  qmarks.reverse().join(' AND '))
+    }
 
-        return query;
+    return query;
 }
 
 MSSQL_Adapter.prototype.prepare_insert = function(table, fielddefs)

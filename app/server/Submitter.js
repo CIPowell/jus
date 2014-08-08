@@ -14,15 +14,18 @@ Submitter.prototype.transform = function(record)
 
     for( var fld in record )
     {
-        results = this.transform_field(fld, record[fld], results);
+        this.transform_field(fld, record[fld], results);
     }
+}
 
-    return results;
+Submitter.prototype.transform_callback = function(field_name, record)
+{
+       
 }
 
 // A field can
 
-Submitter.prototype.transform_field = function(field_name, value, results_object)
+Submitter.prototype.transform_field = function(field_name, value, results_object, idx)
 {
     var obj = { field_name : field_name, value : value };
     
@@ -30,22 +33,29 @@ Submitter.prototype.transform_field = function(field_name, value, results_object
     {
         var transformers = this.fielddefs[field_name].transforms;
         
-        for( var t in transformers )
-        {
-            var t_params = transformers[t];
+     
+        var t_params = transformers[t];
 
-            t_params.db = this.connection;
-
-            var t_f = require('../../app/server/transforms/' + transformers[t].name + '.js').bind(t_params);
-            t_f(obj);
-
-        }
+        t_params.db = this.connection;
+        t_params.idx = idx;
+        t_params.callback =  this.transform_field_callback.bind(this);
+        
+        var t_f = require('../../app/server/transforms/' + transformers[t].name + '.js').bind(t_params);
+        t_f(obj);   
     }
-    if( obj.field_name ) // basically to handle "blackhole"
+    
+}
+
+Submitter.prototype.transform_field_callback = function(obj, idx, results_object, final)
+{
+    if( obj.field_name && idx < this.fielddefs[obj.field_name].transforms.length && !final) // basically to handle "blackhole"
     {
-        results_object[obj.field_name] = obj.value;
+        this.transform_field(obj.field_name, obj.value, results_object, ++idx);
     }
-    return results_object;
+    else
+    {
+        this.transform_callback(obj.field_name, results_object);
+    }
 }
 
 Submitter.prototype.insert_into_db = function(record)
